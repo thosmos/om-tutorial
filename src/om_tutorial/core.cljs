@@ -2,7 +2,10 @@
   (:require [goog.dom :as gdom]
             [om.next :as om :refer-macros [defui]]
             [om.dom :as dom]
-            [cljs.pprint :as pprint]))
+            [cljs.pprint :as pprint]
+            [thosmos.core :as ts]
+            [datascript.core :as d]
+            ))
 
 (enable-console-print!)
 
@@ -44,8 +47,7 @@
    {:db/id      -6
     :type       :dashboard/list
     :list/title "A List of Various Media"
-    :list/items [-1 -2 -3 -4 -5]
-    }
+    :list/items [-1 -2 -3 -4 -5]}
    {:db/id           -7
     :type            :dashboard/root
     :dashboard/title "The Root"
@@ -54,36 +56,45 @@
 
 (defui Post
   static om/Ident
-  (ident [this {:keys [id]}] id)
-  static ts/IKey
-  (key [this] {:type :dashboard/post})
+  (ident [this {:keys [id]}] [:db/id id])
+  static ts/ITypeKey
+  (type-key [this] {:type :dashboard/post})
   static om/IQuery
   (query [this]
-    [:db/id :type :title :author :content]))
+    [:db/id :type :title :author :content])
+  Object
+  (render [this]
+    (dom/div nil "Post")))
+
+
+
 
 (defui Photo
   static om/Ident
   (ident [this {:keys [id]}] id)
-  static ts/IKey
-  (key [this] {:type :dashboard/photo})
+  static ts/ITypeKey
+  (type-key [this] {:type :dashboard/photo})
   static om/IQuery
   (query [this]
     [:db/id :type :title :image :caption]))
 
 (defui Graphic
   static om/Ident
-  (ident [this {:keys [id]}] id)
-  static ts/IKey
-  (key [this] {:type :dashboard/graphic})
+  (ident [this {:keys [id]}] [:db/id id])
+  static ts/ITypeKey
+  (type-key [this] {:type :dashboard/graphic})
   static om/IQuery
   (query [this]
-    [:db/id :type :title :image]))
+    [:db/id :type :title :image])
+  Object
+  (render [this]
+    (dom/div nil "Graphic")))
 
 (defui ItemList
   static om/Ident
   (ident [this {:keys [id]}] id)
-  static ts/IKey
-  (key [this] {:type :dashboard/list})
+  static ts/ITypeKey
+  (type-key [this] {:type :dashboard/list})
   static om/IQuery
   (query [this]
     [:db/id :list/title {:list/items (ts/get-query [Post Photo Graphic])}])
@@ -95,19 +106,52 @@
 
 (defui Dashboard
   static om/Ident
-  (ident [this {:keys [id]}] id)
-  static ts/IKey
-  (key [this] {:type :dashboard/root})
+  (ident [this {:keys [id]}] [:db/id id])
+  static ts/ITypeKey
+  (type-key [this] {:type :dashboard/root})
   static om/IQuery
   (query [this]
-    [:db/id :dashboard/title {:dashboard/list (ts/get-query ItemList)}])
+    [:db/id :dashboard/title                                ;{:dashboard/list (ts/get-query ItemList)}
+     ])
   Object
   (render [this]
     (dom/div nil
       (get (om/props this) :dashboard/title)
-      (ts/render this ItemList :dashboard/list))))
+      ;(ts/render this ItemList)
+      )))
+
+(def dashboard (om/factory Dashboard))
 
 (defui App
   Object
   (render [this]
-    (ts/render this Dashboard)))
+    (dom/div nil
+      "ITypeKey experiment"
+      ;(ts/render this (dashboard))
+      ;((om/factory Post))
+      ;(dashboard)
+      ;(js/console.log "component?" (om/component? (dashboard {:dashboard/title "yes"})))
+      )))
+
+(def app (om/factory App))
+
+(defmulti read om/dispatch)
+
+(defmethod read :default
+  [{:keys [state]} k _]
+  (let [db (d/db state)] ;; CACHING!!!
+    (js/console.log "read for" k)
+    ;(if (contains? st k)
+    ;  {:value (get st k)}
+    ;  {:remote true})
+    ))
+
+(def reconciler
+  (om/reconciler
+    {:state     conn
+     ;:normalize true
+     :parser    (om/parser {:read read})
+     ;:send      (util/transit-post "/api")
+     }))
+
+(om/add-root! reconciler App (gdom/getElement "app"))
