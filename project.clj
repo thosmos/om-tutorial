@@ -4,12 +4,15 @@
                  [org.clojure/clojurescript "1.7.170"]
                  [cljsjs/react "0.14.0-1"]
                  [cljsjs/react-dom "0.14.0-1" :exclusions [cljsjs/react]]
-                 [org.omcljs/om "1.0.0-alpha20" :exclusions [cljsjs/react cljsjs/react-dom]]
+                 [org.omcljs/om "1.0.0-alpha22" :exclusions [cljsjs/react cljsjs/react-dom]]
                  [sablono "0.4.0" :exclusions [cljsjs/react cljsjs/react-dom]]
-                 [datascript "0.13.2"]
-                 [rum-reforms "0.4.0"]
-                 [figwheel-sidecar "0.4.0" :scope "provided"]
-                 ]
+                 [datascript "0.13.3"]
+                 [rum-reforms "0.4.3"]
+                 [figwheel-sidecar "0.5.0-1" :scope "provided"]
+                 [cljs-log "0.2.2"]
+                 [shodan "0.4.2"]
+                 [com.cognitect/transit-cljs "0.8.232"]]
+
   ;:clean-targets ["target/"]
 
   :plugins [[lein-cljsbuild "1.1.0"]]
@@ -46,14 +49,14 @@
                         ;:jar true
                         :source-paths ["src"]
                         :compiler
-                                      {:optimizations :advanced
+                                      {:optimizations :none
                                        ;:pretty-print  true
                                        ;:warnings      true
                                        ;:source-map    false
                                        :main       "om-tutorial.core"
                                        :asset-path "js/out"
                                        :output-dir    "resources/public/js/out"
-                                       :output-to     "resources/public/main.js"
+                                       :output-to     "resources/public/main.js"}}]})
                                        ;:modules       {
                                        ;                :cljs-base {
                                        ;                            :output-to "resources/public/js/base.js"
@@ -71,8 +74,3 @@
                                        ;                            :entries    #{"om-tutorial.render"}
                                        ;                            :depends-on #{:core :foo}
                                        ;                            }}
-                                       }}
-
-                       ]
-              }
-  )

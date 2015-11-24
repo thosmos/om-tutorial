@@ -9,9 +9,9 @@
                        :figwheel     true
                        :source-paths ["src"]
                        :compiler     {:main       "om-tutorial.core"
-                                      :asset-path "js/out-fig"
+                                      :asset-path "out"
                                       :output-to  "resources/public/main.js"
-                                      :output-dir "resources/public/js/out-fig"
+                                      :output-dir "resources/public/out"
                                       :verbose    true}}]})
 
 (ra/cljs-repl)
