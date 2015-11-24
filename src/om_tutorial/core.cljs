@@ -78,9 +78,10 @@
 (defmulti read om/dispatch)
 
 (defmethod read :default
-  [{:keys [state] :as env} k _]
+  [{:keys [state query] :as env} k _]
   (let [db (d/db state)]                                    ;; CACHING!!!
-    (l/debug "read for default" k)
+    (l/debug "READ DEFAULT key" k)
+    (l/debug "READ DEFAULT query" query)
     (debug (keys env))
     ;(d/q '[:find [(pull ?e [*]) ...] :where [?e :type :type/content]] (d/db conn))
 
@@ -92,7 +93,7 @@
 (defmethod read :posts
   [{:keys [state query] :as env} k _]
   (let [db (d/db state)]                                    ;; CACHING!!!
-    (debug "read for" k)
+    (debug "READ :posts query" query)
     (debug "env keys " (keys env))
 
     (let [posts (d/q '[:find [(pull ?e ?query) ...] :in $ ?query :where [?e :content/type :blog/post]] (d/db conn) query)]
