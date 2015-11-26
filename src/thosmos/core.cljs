@@ -51,7 +51,7 @@
     ;; in advanced, statics will get elided
     (when (goog/isFunction x)
       (let [x (js/Object.create (. x -prototype))]
-        (when (satisfies? TypeKey x)
+        (when (satisfies? ITypeKey x)
           (let [t (type-key x)
                 c (-> t meta :component)]
             (assert (nil? c) (str "Query violation, " x " reuses " c " typekey"))

@@ -82,23 +82,42 @@
   (let [db (d/db state)]                                    ;; CACHING!!!
     (l/debug "READ DEFAULT key" k)
     (l/debug "READ DEFAULT query" query)
-    (debug (keys env))
+    ;(debug (keys env))
     ;(d/q '[:find [(pull ?e [*]) ...] :where [?e :type :type/content]] (d/db conn))
-
+    {:value nil}
     ))
+
+;;; assumed to be called with a query or :type lookup key, otherwise it would return everything in the DB
+(defmethod read :db/id
+  [{:keys [state query] :as env} key params]
+  (l/debug "READ DB/ID query" query)
+  (l/debug "READ DB/ID params" params)
+  {:value nil}
+)
+
+;;; assumed to be called with a query or :type lookup key, otherwise it would return everything in the DB
+(defmethod read :db/ident
+  [{:keys [state query] :as env} key params]
+  (l/debug "DB/IDENT ast" (:ast env))
+  (l/debug "DB/IDENT query" query)
+  (l/debug "DB/IDENT params" params)
+  (let [value (d/pull (d/db state) query [:db/ident (:ident-ref params)])]
+    (debug "DB/IDENT result" value)
+    {:value value})
+  )
 ;(if (contains? st k)
 ;  {:value (get st k)}
 ;  {:remote true})
 
-(defmethod read :posts
-  [{:keys [state query] :as env} k _]
-  (let [db (d/db state)]                                    ;; CACHING!!!
-    (debug "READ :posts query" query)
-    (debug "env keys " (keys env))
-
-    (let [posts (d/q '[:find [(pull ?e ?query) ...] :in $ ?query :where [?e :content/type :blog/post]] (d/db conn) query)]
-      (debug "query results:" posts)
-      {:value posts})))
+;(defmethod read :posts
+;  [{:keys [state query] :as env} k _]
+;  (let [db (d/db state)]                                    ;; CACHING!!!
+;    (debug "READ :posts query" query)
+;    (debug "env keys " (keys env))
+;
+;    (let [posts (d/q '[:find [(pull ?e ?query) ...] :in $ ?query :where [?e :content/type :blog/post]] (d/db conn) query)]
+;      (debug "query results:" posts)
+;      {:value posts})))
 
 (def reconciler
   (om/reconciler
@@ -158,37 +177,47 @@
      (dom/div nil "Graphic")))
 
  (defui ItemList
-   static om/Ident
-   (ident [this props] [:db/ident :content/list])
+   ;static om/Ident
+   ;(ident [this props] [:db/ident :content/list])
    ;static ts/ITypeKey
    ;(type-key [this] {:type :type/list})
-   static ts/ICollTypeKey
-   (coll-key [this] :content/type)
+   ;static ts/ICollTypeKey
+   ;(coll-key [this] :content/type)
+   ;static om/IQueryParams
+   ;(params [this] {:id-ref nil})
    static om/IQuery
    (query [this]
-     [:db/id :list/title {:list/items (ts/get-union (with-meta [Post Photo Graphic] {:coll-key (ts/get-coll-key this)}) [:favorites])}])
+     ;[:db/id :list/title {:list/items (ts/get-union (with-meta [Post Photo Graphic] {:coll-key (ts/get-coll-key this)}) [:favorites])}]
+     `[
+       ;({:db/id [:db/id :list/title]} {:id-ref ?id-ref})
+      {:list/items
+       ;(ts/get-union )
+       {:post    ~(om/get-query Post)
+        :photo   ~(om/get-query Photo)
+        :graphic ~(om/get-query Graphic)}}])
    Object
    (render [this]
      (dom/div nil
        (get (om/props this) :list/title)
-       (ts/render this :list/items))))
+       ;(ts/render this :list/items)
+       )))
 
-; (defui Dashboard
-;   static om/Ident
-;   (ident [this {:keys [id]}] id)
-;   static ts/IDbIdent
-;   (db-ident [this] :dashboard/root)
-;   static om/IQuery
-;   (query [this]
-;     [:db/id :dashboard/title])
-; ;{:dashboard/list (ts/get-query ItemList)}
-;   Object
-;   (render [this]
-;     (dom/div nil
-;       (get (om/props this) :dashboard/title))))
-;       ;(ts/render this ItemList)
+ (defui Dashboard
+   static om/Ident
+   (ident [this props] [:db/ident :dashboard/root])
+   static om/IQuery
+   (query [this]
+     `[({:db/ident [:dashboard/title]} {:ident-ref :dashboard/root}) {:list/items ~(om/get-query ItemList)}])
+ ;{:dashboard/list (ts/get-query ItemList)}
+   Object
+   (render [this]
+     (dom/div nil
+       (dom/div nil "TypeKey experiment")
+       (dom/br nil nil)
+       (dom/div nil (get-in (om/props this) [:db/ident :dashboard/title])))))
+       ;(ts/render this ItemList)
 
-; (def dashboard (om/factory Dashboard))
+ (def dashboard (om/factory Dashboard))
 
 (defui App
   static om/IQuery
@@ -200,8 +229,9 @@
       (dom/div nil
         (dom/div nil "TypeKey experiment")
         (dom/br nil nil)
-        (for [post posts]
-          ((om/factory Post) post))
+        ((om/factory ItemList))
+        (debug "ItemList QUERY" (om/get-query ItemList))
+        ;(for [post posts] ((om/factory Post) post))
         ))))
 ;(dashboard)
 ; (js/console.log "component?"))))
@@ -211,7 +241,7 @@
 
 (def app (om/factory App))
 
-(om/add-root! reconciler App (gdom/getElement "app"))
+(om/add-root! reconciler Dashboard (gdom/getElement "app"))
 
 
 ;(defui Campaign
