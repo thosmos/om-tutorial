@@ -12,3 +12,5 @@ pom.xml.asc
 .hg/
 .idea
 figwheel_server.log
+resources/public/out
+resources/public/main.js
