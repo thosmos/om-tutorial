@@ -1,0 +1,2 @@
+(start-repl)
+(js/console.log "hello from repl")

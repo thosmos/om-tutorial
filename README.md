@@ -1,14 +1,27 @@
 # om-tutorial
 
-A Clojure library designed to ... well, that part is up to you.
+A simple Om.Next tutorial app using Datascript and Boot
 
 ## Usage
 
-FIXME
+in a terminal:
+```
+boot dev
+```
+
+in another terminal:
+```
+boot repl -c
+(start-repl)
+(js/console.log "hello from the CLJS repl!")
+```
+
+to update a project.clj for integrating with IntelliJ:
+```
+boot lein-generate
+```
 
 ## License
-
-Copyright © 2015 FIXME
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
